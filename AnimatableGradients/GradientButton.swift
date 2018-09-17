@@ -10,11 +10,18 @@ import UIKit
 
 @IBDesignable
 final class GradientButton: UIButton {
-
+    
+    private enum GradientType {
+        case vertical
+        case horizontal
+        case diagonalFromBottom
+        case diagonalFromTop
+        case radial
+    }
+    
     private lazy var gradient: CAGradientLayer = {
         let gr = CAGradientLayer()
         gr.frame = bounds
-        gr.colors = [firstColor.cgColor, secondColor.cgColor]
         return gr
     }()
     
@@ -41,6 +48,7 @@ final class GradientButton: UIButton {
         }
     }
     
+   
     @IBInspectable
     private var horizontalGradientType: Bool = false {
         didSet {
@@ -76,21 +84,14 @@ final class GradientButton: UIButton {
             }
         }
     }
-
+    
     private var gradientType: GradientType = .vertical {
         didSet {
             updateGradientType()
         }
     }
     
-    private enum GradientType {
-        case vertical
-        case horizontal
-        case diagonalFromBottom
-        case diagonalFromTop
-        case radial
-    }
-    
+   
     @IBInspectable
     private var cornerRadius: Bool = false {
         didSet {
@@ -108,10 +109,12 @@ final class GradientButton: UIButton {
 
     override func prepareForInterfaceBuilder() {
         setUpGradient()
+        updateGradient()
     }
     
     override func awakeFromNib() {
         setUpGradient()
+        updateGradient()
     }
     
     private func setUpGradient() {
@@ -119,11 +122,17 @@ final class GradientButton: UIButton {
     }
     
     private func updateGradient() {
+        gradient.colors = []
         gradient.colors = [firstColor.cgColor, secondColor.cgColor]
+        
+        if shouldAnimate {
+            animateGradient()
+        }
     }
     
     private func updateGradientType() {
         switch gradientType {
+            
         case .vertical: break
         case .horizontal:
             gradient.transform = CATransform3DMakeRotation(CGFloat.pi / 2, 0, 0, 1)
@@ -132,13 +141,21 @@ final class GradientButton: UIButton {
         case .diagonalFromTop:
             gradient.transform = CATransform3DMakeRotation(-CGFloat.pi / 4, 0, 0, 1)
             gradient.frame = CGRect(x: -bounds.width, y: 0, width: bounds.width * 3, height: bounds.height)
-            
+    
         case .diagonalFromBottom:
             gradient.transform = CATransform3DMakeRotation(CGFloat.pi / 4, 0, 0, 1)
             gradient.frame = CGRect(x: -bounds.width, y: 0, width: bounds.width * 3, height: bounds.height)
+           
         case .radial:
             gradient.type = .radial
         }
+        
+        let types = [verticalGradientType, horizontalGradientType, bottomDiagonalGradientType, topDiagonalGradientType, radialGradientType]
+        
+        for var type in types {
+            type = false
+        }
+        
     }
     
     private func createCornerRadius() {
@@ -151,7 +168,7 @@ final class GradientButton: UIButton {
         anim.fromValue = gradient.colors
         anim.toValue = gradient.colors?.reversed()
         
-        anim.duration = 5
+        anim.duration = 3
         anim.repeatCount = .infinity
         anim.autoreverses = true
         
