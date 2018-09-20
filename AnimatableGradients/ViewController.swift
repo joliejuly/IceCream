@@ -8,12 +8,14 @@
 
 import UIKit
 
-final class ViewController: UIViewController {
+final class GradientViewController: UIViewController {
 
+    @IBOutlet weak var gradientButton: GradientButton!
+    
     private var isEmitting: Bool = false
     
     private var emitterLayer: CAEmitterLayer?
-    private lazy var cell = CAEmitterCell()
+    private var cell: CAEmitterCell?
     
     private lazy var gradientLayer: CAGradientLayer = {
         let gradientLayer = CAGradientLayer()
@@ -25,15 +27,58 @@ final class ViewController: UIViewController {
         return gradientLayer
     }()
     
-    
-    @IBOutlet weak var gradientButton: UIButton!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    @IBAction func buttonTapped(_ sender: GradientButton) {
         
+        if isEmitting {
+            deleteEmitterLayer()
+        } else {
+            createEmitterLayer()
+            addGradientAnimation()
+        }
+        
+        isEmitting = !isEmitting
         
     }
     
+    private func deleteEmitterLayer() {
+        emitterLayer?.removeFromSuperlayer()
+        gradientLayer.removeFromSuperlayer()
+        
+        gradientLayer.mask = nil
+        emitterLayer = nil
+        cell = nil
+    }
+    
+    private func createEmitterLayer() {
+        
+        emitterLayer = CAEmitterLayer()
+        cell = CAEmitterCell()
+        
+        emitterLayer?.emitterPosition = gradientButton.center
+        emitterLayer?.emitterSize = CGSize(width: 10, height: 10)
+        
+        gradientButton.layer.zPosition = 1
+        emitterLayer?.zPosition = 0
+
+        cell?.birthRate = 10
+        cell?.lifetime = 10
+        cell?.velocity = 100
+        cell?.scale = 0.5
+
+        cell?.beginTime = CACurrentMediaTime() - 1
+        cell?.emissionRange = CGFloat.pi * 2
+
+        let image = UIImage(named: "sample-886-ice-cream-cone.png") ?? UIImage()
+        cell?.contents = image.cgImage
+
+        emitterLayer?.emitterCells = [cell ?? CAEmitterCell()]
+
+    
+        view.layer.addSublayer(gradientLayer)
+        
+        gradientLayer.mask = emitterLayer
+    }
+
     private func addGradientAnimation() {
         let anim = CABasicAnimation(keyPath: "colors")
         anim.fromValue = [
@@ -58,62 +103,5 @@ final class ViewController: UIViewController {
         gradientLayer.add(anim, forKey: "colors")
     }
     
-    @IBAction func buttonTapped(_ sender: GradientButton) {
-        
-        if isEmitting {
-            deleteEmitterLayer()
-        } else {
-            createEmitterLayer()
-            addGradientAnimation()
-        }
-        
-        isEmitting = !isEmitting
-        
-    }
-    
-    private func deleteEmitterLayer() {
-   
-        for layer in view.layer.sublayers! {
-            print(layer)
-        }
-        
-        
-       emitterLayer?.removeFromSuperlayer()
-       gradientLayer.removeFromSuperlayer()
-        
-       gradientLayer.mask = nil
-       emitterLayer = nil
-    }
-    
-    private func createEmitterLayer() {
-        
-        emitterLayer = CAEmitterLayer()
-       
-        emitterLayer?.emitterPosition = gradientButton.center
-        emitterLayer?.emitterSize = CGSize(width: 10, height: 10)
-        
-        gradientButton.layer.zPosition = 1
-        emitterLayer?.zPosition = 0
-
-        cell.birthRate = 10
-        cell.lifetime = 10
-        cell.velocity = 100
-        cell.scale = 0.5
-
-        cell.beginTime = CACurrentMediaTime() - 1
-        cell.emissionRange = CGFloat.pi * 2
-
-        cell.contents = UIImage(named: "sample-908-target.png")!.cgImage
-
-        emitterLayer?.emitterCells = [cell]
-
-    
-        view.layer.addSublayer(gradientLayer)
-        
-        gradientLayer.mask = emitterLayer
-
-        print(view.layer.sublayers!)
-    }
-
 }
 
